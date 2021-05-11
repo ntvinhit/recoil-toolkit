@@ -42,3 +42,7 @@ export function getRecoilStore(name: string = DEFAULT_STORE): Promise<RecoilStor
       }
    });
 }
+
+export function getRecoilStoreSync(name: string = DEFAULT_STORE): RecoilStore | undefined {
+   return recoilStores[name];
+}

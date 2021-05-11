@@ -1,2 +1,2 @@
 export * from './RecoilTunnel';
-export { getRecoilStore } from './getStore';
+export { getRecoilStore, getRecoilStoreSync } from './getStore';

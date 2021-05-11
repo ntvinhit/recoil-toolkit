@@ -1,11 +1,9 @@
 {
    "name": "recoil-toolkit",
-   "version": "0.0.7",
+   "version": "0.0.8",
    "description": "recoil-toolkit",
-   "main": "./build/es5/index.js",
-   "module": "./build/es6/index.js",
-   "typings": "./build/es6/index.d.ts",
-   "types": "./build/es6/index.d.ts",
+   "main": "./src/index.ts",
+   "types": "./src/types.ts",
    "engines": {
       "node": ">=10",
       "npm": ">=6"
