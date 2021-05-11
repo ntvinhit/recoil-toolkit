@@ -1,8 +1,7 @@
 # recoil-toolkit
 <p align="center">
   <a href="https://www.npmjs.com/package/recoil-toolkit"><img src="https://img.shields.io/npm/v/recoil-toolkit.svg?style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/recoil-toolkit"><img src="https://img.shields.io/npm/dt/recoil-toolkit.svg?style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/recoil-toolkit"><img src="./packages/recoil-toolkit/cov-badge.svg"></a><br/>
+  <a href="https://www.npmjs.com/package/recoil-toolkit"><img src="https://img.shields.io/npm/dt/recoil-toolkit.svg?style=flat-square"></a><br/>
 </p>
 
 Recoil is the next generation state management library: CM safe, memoized, atomic, transactional. [recoiljs.org](https://recoiljs.org)
@@ -35,35 +34,22 @@ npm i recoil recoil-toolkit
 # OR
 yarn add recoil recoil-toolkit
 ```
-## 📖 Table of contents
+## 📖 Documentation
 
-- [Core Concepts](https://github.com/salvoravida/recoil-toolkit#%EF%B8%8F-core-concepts)
-- [State Management Pattern](https://github.com/salvoravida/recoil-toolkit#%EF%B8%8F-state-management-pattern)
-  + [Tasks](https://github.com/salvoravida/recoil-toolkit#-tasks)
-  + [Advanced Tasks](https://github.com/salvoravida/recoil-toolkit#-advanced-tasks)
-  + [Immutable updaters](https://github.com/salvoravida/recoil-toolkit#wrench-immutable-updaters)
-- [Recoil Tunnel](https://github.com/salvoravida/recoil-toolkit#boom-recoiltunnel)
-- [Redux Tunnel](https://github.com/salvoravida/recoil-toolkit#electron-reduxtunnel)
-- [Recoil vs Redux](https://github.com/salvoravida/recoil-toolkit#-recoil-vs-redux)
-- [Demo Todolist CRUD](https://github.com/salvoravida/recoil-toolkit#-demo-todolist-crud)
-- [Contributing](https://github.com/salvoravida/recoil-toolkit#-contributing)
+- [Api guide](https://github.com/salvoravida/recoil-toolkit/tree/master/docs) (work in progress...)
 
-## ❤️ Core Concepts 
-*First of all: read the official recoil guide [recoiljs.org](https://recoiljs.org)*
+## ❤️ Core Concepts
+*read before the official recoil guide [recoiljs.org](https://recoiljs.org)*
 
-- **Atom**: micro state 
+- **Atom**: micro state
 - **Selector** : derived state from atoms and other selectors
-- **Set**: function(atom, prev => next) set next atom value
+- **Set**: function(microState, prev => next) dispatch micro updates
 - **Task**: async function that do something and can read(get)/write(set) to/from the store.
 
 Simple use pattern with hooks:
 ```javascript
-import { useRecoilState, useRecoilValue, useRecoilCallback } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { useRecoilTask } from 'recoil-toolkit';
-
-const task = ({ set, reset, snapshot }) => async () => {
-   // await do something and update store
-};
 
 //in your component ...
 const [state, setState] = useRecoilState(atom);
@@ -87,7 +73,7 @@ Task is a core concept of `recoil-toolkit`.
 Basically it's an async function (Promise) that have access to the store with a closure of `({ set, reset, snapshot })`.
 
 ```javascript
-const task = ({ set, reset, snapshot }) => async () => {
+const task = ({ set, reset, snapshot }) => async ({}) => {
    // await do something and update store
 };
    
@@ -160,23 +146,7 @@ export const NotificationItem = ({ id, text }: { id: number; text: string }) => 
    );
 };
 ```
-Tasks composition: simple create macro tasks by composing micro tasks
-```typescript
-export const removeItemTask = (rti: RecoilTaskInterface) => async (id: number) => {
-   // ...
-};
-
-export const editItemTask = (rti: RecoilTaskInterface) => async (item: Item) => {
-   // ...
-};
-
-// task composition example
-export const editAndRemoveTask = (rti: RecoilTaskInterface) => async (item: Item) => {
-   await editItemTask(rti)(item);
-   await removeItemTask(rti)(item.id);
-};
-```
-### 🔨 Advanced Tasks
+### 🔨 Advanced Task Concepts
 Task can have options for advanced use case.
 ```typescript
  type TaskOptions = {
@@ -215,7 +185,7 @@ export const useAdvancedTask2 = () =>
 // somewhere in your ui ...
 const isGlobalLoading = useIsLoading();
 ```
-loaderStack can be a string, so you can have many loader stacks if needed. 
+loaderStack can be a string, so you can have many loader stacks if needed.
 ```typescript
 export const useAdvancedTask1 = () =>
    useRecoilTask(advancedTask1, [], {
@@ -248,55 +218,6 @@ function ComponentB(){
    // ....
 }
 ```
-### :wrench: Immutable updaters
-Recoil atom set api need an immutable updater function, `recoil-toolkit` has a built in lib for common cases.
-Number atoms:
-```typescript
-import { inc, dec, decAbs, show, hide } from '/recoil-toolkit';
-
-export const counter = atom<number>({
-   key: 'counter',
-   default: 0,
-});
-
-set(counter, inc);     // set(counter, s=>s+1)
-set(counter, dec);     // set(counter, s=>s-1)
-set(counter, decAbs);  // dec to zero
-set(counter, show);    // alias for inc (loader stack)
-set(counter, hide);    // alias for decAbs (loader stack)
-```
-Boolean atoms:
-```typescript
-import { and, or, not, toggle } from '/recoil-toolkit';
-
-export const flag = atom<boolean>({
-   key: 'counter',
-   default: false,
-});
-
-set(flag, and(value));    // set(counter, s=>s && !!value)
-set(flag, or(value);      // set(counter, s=>s || !!value)
-set(flag, not);           // set(counter, s=>!s)
-set(flag, toggle);        // alias for not
-```
-Array atoms:
-```typescript
-import { push, pushTop, unshift, reverse, filter, updateObj, removeObj } from '/recoil-toolkit';
-
-export const list = atom<any[]>({
-   key: 'counter',
-   default: [],
-});
-
-set(list, push(value));                 // push value to array and return a new array
-set(list, unshift(value);               // insert at top and return a new array
-set(list, pushTop(value);               // alias for unshift
-set(list, reverse);                     // revers array and return a new array
-set(list, filter(predicate));           // set(list, l=>l.filter(predicate)
-set(list, updateObj(value, match));     // update item, based on match ({id} for example)
-set(list, removeObj(value, match));     // remove item, based on match ({id} for example)
-```
-
 ## :boom: RecoilTunnel
 RecoilTunnel capture the current recoil store instance, and allow you to use it outside of React.
 https://codesandbox.io/s/k6ri5
@@ -391,35 +312,6 @@ ReactDOM.render(
 ```
 Note: you can use `react-redux` useSelector/useDispatch to access reduxStore, instead of useReduxSelector from `recoil-toolkit`, or both at same time.
 https://codesandbox.io/s/czobq
-## ⚡ Recoil vs Redux
-
-|  | Recoil | Redux |
-| --- |--- |---  |
-|Performance|          ✅  **O(1)** |    ❌ O(n)|
-|Concurrent Mode        |  ✅  **yes**       |      ❌ no|
-|Combine states   |  ✅  **graph**      |     ❌ tree|
-|Boilerplate       | ✅  **1x**     |       ❌  5x|
-|Hooks           |✅  **built in**     |    💡 `react-redux`
-|Async         |  ✅  **built in**     |   💡 `redux-saga`|
-|Memoized       | ✅  **built in**     |💡 `reselect`|
-|Dynamic store  | ✅  **built in**     |    💡 `injectReducer`|
-|Can read Recoil states |  ✅  **yes**   | ❌ no|
-|Can read Redux states |  💡 `recoil-toolkit`  | ✅  **yes**|
-|Use outside React  |  💡 `recoil-toolkit`   | ✅  **yes**|
-|Dev Tools |  ⚠️ wip...   | ✅  **yes**|
-
-Performance: Recoil subscriptions are on atom/selector updaters, while in Redux are on all actions. So if you have N connected component and dispatch an action that should trigger only one component, even if re-render is stopped by useSelector optimization, redux have to execute N subscribtion callbacks.
-
-Redux will never be cm safe, without performance issue (like re-rendering everything) because it hasn't the commit phase. 
-`dispatch` is sync (instantly executed) while `set` is async, it enqueues updaters.
-
-Atomic states design allow you more flexiblity while thinking your app as small autonomous building blocks (widgets) eventually interconnected if needed (atoms, selectors, graph connection)
-
-You could have less than 5x boilerplate with redux, with many wrappers like RTK or redux-query, but even that you will write less code more powerful witn recoil. Set(atom, value), Execute Task are much more easy concepts to managed with , than dispatch, actions, reducers, sagas, etc...
-
-ReduxTunnel (read redux states from recoil selectors) helps you to gradually migrate your redux monolithic app to recoil atomic states.
-
-DevTools: ok redux-devtools are much mature than recoilize or some others for recoil. But it is only a matter of time ...
 
 
 ## 💥 Demo Todolist CRUD
