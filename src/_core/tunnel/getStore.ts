@@ -1,3 +1,4 @@
+import { RecoilState, RecoilValue } from 'recoil';
 import { RecoilStore } from '../../types';
 
 interface RecoilStores {
@@ -46,3 +47,23 @@ export function getRecoilStore(name: string = DEFAULT_STORE): Promise<RecoilStor
 export function getRecoilStoreSync(name: string = DEFAULT_STORE): RecoilStore | undefined {
    return recoilStores[name];
 }
+
+export const getRecoilValue = <T>(value: RecoilValue<T>) => {
+   const store = getRecoilStoreSync();
+   if (!store) throw new Error('STORE_NOT_FOUND');
+   return store.getLoadable(value).getValue();
+};
+export const getRecoilValueAsync = <T>(value: RecoilValue<T>) => {
+   const store = getRecoilStoreSync();
+   if (!store) throw new Error('STORE_NOT_FOUND');
+   return store.getLoadable(value).toPromise();
+};
+
+export const setRecoilValue = <T>(
+  state: RecoilState<T>,
+  valOrUpdater: ((currVal: T) => T) | T,
+) => {
+   const store = getRecoilStoreSync();
+   if (!store) throw new Error('STORE_NOT_FOUND');
+   return store.set(state, valOrUpdater);
+};
